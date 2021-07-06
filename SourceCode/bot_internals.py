@@ -62,8 +62,7 @@ def set_price_file(price: float, percent: int):
     buy_price = round(price * (1 - percent / 100), 2)
     sell_price = round(price * (1 + percent / 100), 2)
     json_data = {"buy_price": buy_price, "sell_price": sell_price}
-    #with open("/config/pricing.json", 'w') as prices_file:
-    with open("/Users/ahrenstein/Scratch/pricing.json", 'w') as prices_file:
+    with open("/config/pricing.json", 'w') as prices_file:
         prices_file.write(json.dumps(json_data))
         prices_file.close()
 
@@ -75,8 +74,7 @@ def check_price_file() -> [float,float]:
         buy_price: The buy price we will use
         sell_price: The sell price we will use
     """
-    #with open("/config/pricing.json") as prices_file:
-    with open("/Users/ahrenstein/Scratch/pricing.json") as prices_file:
+    with open("/config/pricing.json") as prices_file:
         data = json.load(prices_file)
         prices_file.close()
     return data['buy_price'], data['sell_price']
