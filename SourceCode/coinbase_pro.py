@@ -128,7 +128,8 @@ def check_balance(api_url: str, config_file: str, coin="USD") -> [bool, float]:
     return False, float(account['balance'])
 
 
-def limit_buy_currency(api_url: str, config_file: str, currency: str, buy_amount: float, buy_price: float) -> bool:
+def limit_buy_currency(api_url: str, config_file: str, currency: str,
+                       buy_amount: float, buy_price: float, aws_alerts=False) -> bool:
     """
     Conduct a limit buy on Coinbase Pro to trade a currency with USD
 
@@ -138,6 +139,7 @@ def limit_buy_currency(api_url: str, config_file: str, currency: str, buy_amount
         currency: The cryptocurrency the bot is monitoring
         buy_amount: The amount of $USD the bot plans to spend
         buy_price: The limit price of the currency we are interested in
+        aws_alerts: Use AWS alerts (default: False)
 
     Returns:
         trade_success: A bool that is true if the trade succeeded
@@ -156,8 +158,11 @@ def limit_buy_currency(api_url: str, config_file: str, currency: str, buy_amount
     print(order_config)
     print(buy_result)
     if 'message' in buy_result:
-        print("LOG: Buy order failed.")
-        print("LOG: Reason: %s" % buy_result['message'])
+        sns_message = "Buy order failed.\n Reason: %s" % buy_result['message']
+        print("LOG: %s" % sns_message)
+        if aws_alerts:
+            aws_creds = aws_functions.get_aws_creds_from_file(config_file)
+            aws_functions.post_to_sns(aws_creds[0], aws_creds[1], aws_creds[2], "Sideways Bot Error", sns_message)
         return False
     else:
         print("LOG: Buy order succeeded.")
@@ -165,7 +170,8 @@ def limit_buy_currency(api_url: str, config_file: str, currency: str, buy_amount
         return True
 
 
-def limit_sell_currency(api_url: str, config_file: str, currency: str, sell_price: float) -> bool:
+def limit_sell_currency(api_url: str, config_file: str, currency: str,
+                        sell_price: float, aws_alerts=False) -> bool:
     """
     Conduct a limit sell on Coinbase Pro to trade a currency with USD
 
@@ -174,6 +180,7 @@ def limit_sell_currency(api_url: str, config_file: str, currency: str, sell_pric
         config_file: Path to the JSON file containing credentials and config options
         currency: The cryptocurrency the bot is monitoring
         sell_price: The limit price of the currency we are interested in
+        aws_alerts: Use AWS alerts (default: False)
 
     Returns:
         trade_success: A bool that is true if the trade succeeded
@@ -189,8 +196,11 @@ def limit_sell_currency(api_url: str, config_file: str, currency: str, sell_pric
                                'time_in_force': "GTC", 'product_id': '%s-USD' % currency})
     sell_result = requests.post(api_url + sell_query, data=order_config, auth=coinbase_auth).json()
     if 'message' in sell_result:
-        print("LOG: Sell order failed.")
-        print("LOG: Reason: %s" % sell_result['message'])
+        sns_message = "Sell order failed.\n Reason: %s" % sell_result['message']
+        print("LOG: %s" % sns_message)
+        if aws_alerts:
+            aws_creds = aws_functions.get_aws_creds_from_file(config_file)
+            aws_functions.post_to_sns(aws_creds[0], aws_creds[1], aws_creds[2], "Sideways Bot Error", sns_message)
         return False
     else:
         print("LOG: Sell order succeeded.")

@@ -62,8 +62,8 @@ def set_price_file(price: float, percent: int):
     buy_price = round(price * (1 - percent / 100), 2)
     sell_price = round(price * (1 + percent / 100), 2)
     json_data = {"buy_price": buy_price, "sell_price": sell_price}
-    with open("/config/pricing.json", 'w') as prices_file:
-    #with open("/Users/ahrenstein/Scratch/pricing.json", 'w') as prices_file:
+    #with open("/config/pricing.json", 'w') as prices_file:
+    with open("/Users/ahrenstein/Scratch/pricing.json", 'w') as prices_file:
         prices_file.write(json.dumps(json_data))
         prices_file.close()
 
@@ -75,8 +75,8 @@ def check_price_file() -> [float,float]:
         buy_price: The buy price we will use
         sell_price: The sell price we will use
     """
-    with open("/config/pricing.json") as prices_file:
-    #with open("/Users/ahrenstein/Scratch/pricing.json") as prices_file:
+    #with open("/config/pricing.json") as prices_file:
+    with open("/Users/ahrenstein/Scratch/pricing.json") as prices_file:
         data = json.load(prices_file)
         prices_file.close()
     return data['buy_price'], data['sell_price']
@@ -93,7 +93,7 @@ def coinbase_pro_cycle(config_file: str, debug_mode: bool) -> None:
     config_params = read_bot_config(config_file)
     if config_params[2]:
         aws_config = aws_functions.get_aws_creds_from_file(config_file)
-        message = "%s has been started" % config_params[8]
+        message = "%s has been started" % config_params[4]
         aws_functions.post_to_sns(aws_config[0], aws_config[1], aws_config[2], message, message)
     # Set API URLs
     if debug_mode:
@@ -110,8 +110,8 @@ def coinbase_pro_cycle(config_file: str, debug_mode: bool) -> None:
             message = "More than .001 %s so we are in SELL mode" % config_params[0]
             print("LOG: %s" % message)
             tx_prices = check_price_file()
-            coinbase_pro.limit_sell_currency(coinbase_pro_api_url,
-                                             config_file, config_params[0], tx_prices[1])
+            coinbase_pro.limit_sell_currency(coinbase_pro_api_url, config_file,
+                                             config_params[0], tx_prices[1], config_params[2])
         # Check if we can buy
         if coinbase_pro.check_balance(coinbase_pro_api_url, config_file)[0]:
             message = "More than $50 USD so we are in BUY mode"
@@ -125,6 +125,6 @@ def coinbase_pro_cycle(config_file: str, debug_mode: bool) -> None:
             usd_available = round(usd_available * (1 - .05 / 100), 2)
             tx_prices = check_price_file()
             coinbase_pro.limit_buy_currency(coinbase_pro_api_url, config_file, config_params[0],
-                                            usd_available, tx_prices[0])
+                                            usd_available, tx_prices[0], config_params[2])
         # Sleep for the specified cycle interval
         time.sleep(config_params[3] * 60)
