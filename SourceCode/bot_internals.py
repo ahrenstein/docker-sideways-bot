@@ -121,6 +121,12 @@ def gemini_cycle(config_file: str, debug_mode: bool) -> None:
             (gemini_exchange_api_url, config_file, config_params[0])
         # Get the decimal precision that Gemini permits for this currency
         tick_size = gemini_exchange.get_decimal_max(gemini_exchange_api_url, config_params[0])
+        if gemini_exchange.check_if_open_orders(gemini_exchange_api_url,
+                                                config_file, config_params[0]):
+            print("LOG: There are current limit orders open on the profile. Doing nothing.")
+            # Sleep for the specified cycle interval
+            time.sleep(config_params[3] * 60)
+            continue
         if currency_balances[0] >= 0.001:
             message = "More than .001 %s so we are in SELL mode" % config_params[0]
             print("LOG: %s" % message)

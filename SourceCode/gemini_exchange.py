@@ -150,6 +150,30 @@ def get_decimal_max(api_url: str, currency: str) -> int:
     return int(tick_size)
 
 
+def check_if_open_orders(api_url: str, config_file: str, currency: str) -> bool:
+    """Check if existing limit orders exist and return True if the do
+
+    Args:
+    api_url: The API URL for the Gemini Exchange
+    config_file: Path to the JSON file containing credentials and config options
+    currency: The cryptocurrency the bot is monitoring
+
+    Returns:
+    tick_size: An integer of decimal places permitted
+    """
+    # Instantiate Gemini and query the price
+    gemini_creds = get_gemini_creds_from_file(config_file)
+    api_query = "/v1/orders"
+    try:
+        result = gemini_api_call(api_url, gemini_creds[0], gemini_creds[1], api_query)
+    except Exception as err:
+        print("ERROR: Unable to get list of orders!")
+        print(err)
+    if not result:
+        return False
+    return True
+
+
 def limit_order(api_url: str, config_file: str, currency: str,
                 buy_amount: float, coin_price: float, sell: bool, aws_alerts: False) -> bool:
     """Conduct a limit order on Gemini to trade a currency with USD
