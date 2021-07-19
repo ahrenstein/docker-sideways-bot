@@ -26,7 +26,8 @@ def main(config_file: str, debug_mode: bool):
     debug_mode: Use Sandbox APIs instead of production
     """
     # Start the Coinbase Pro cycle
-    bot_internals.gemini_cycle(config_file, debug_mode)
+
+    bot_internals.coinbase_cycle(config_file, debug_mode)
 
 
 if __name__ == '__main__':

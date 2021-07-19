@@ -9,7 +9,7 @@
 version: '2'
 services:
   coinbase-btc:
-    container_name: sideways-eth
+    container_name: sideways-btc
     image: local/sideways-bot:test
     build: ./
     volumes:

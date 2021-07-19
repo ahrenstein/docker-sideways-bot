@@ -1,17 +1,17 @@
 Crypto Sideways Bot
 ===================
-This bot is designed to buy and sell cryptocurrency on Gemini ActiveTrader using a USD prefunded portfolio in a sideways fashion.
+This bot is designed to buy and sell cryptocurrency on Coinbase Pro using a USD prefunded portfolio in a sideways fashion.
 
 USE AT YOUR OWN RISK
 --------------------
-I run this bot full time against my own personal Gemini account, however I make no warranties that
+I run this bot full time against my own personal Coinbase account, however I make no warranties that
 the bot will function. It could crash and miss some price movement, or it could detect and buy at the wrong prices. So far
 it has done well for me, but your mileage may vary.  
 As with any open source code: **USE THIS BOT AT YOUR OWN RISK!**
 
 Limitations
 -----------
-The logic behind price setting is very basic. This code was written assuming a dedicated Gemini ActiveTrader profile that will buy/sell all
+The logic behind price setting is very basic. This code was written assuming a dedicated Coinbase Pro profile that will buy/sell all
 of the currency pair only with this bot. Manually touching things may corrupt the bot's plan!
 
 Sideways Movement Method
@@ -30,9 +30,9 @@ Config File
 -----------
 You will need the following:
 
-1. Gemini ActiveTrader credentials tied to the portfolio you want to run the bot against
+1. Coinbase Pro credentials tied to the portfolio you want to run the bot against
 2. Sideways logic parameters:
-    1. The cryptocurrency you want to transact in. (It must support being paired against USD in Gemini ActiveTrader)
+    1. The cryptocurrency you want to transact in. (It must support being paired against USD in Coinbase Pro)
     2. The price movement percentage as an integer
 
 The following sections are optional.
@@ -56,9 +56,10 @@ The file should look like this:
      "cycle_time_minutes": 5,
      "name": "Sideways-Bot"
   },
-   "gemini": {
+   "coinbase": {
       "api_key": "YOUR_API_KEY",
       "api_secret": "YOUR_API_SECRET",
+      "passphrase": "YOUR_API_PASSPHRASE"
    },
    "aws": {
     "access_key": "YOUR_API_KEY",

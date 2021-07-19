@@ -2,6 +2,11 @@ Crypto Sideways Bot: To Do List
 ===============================
 The versions below are future versions that will be released once those features have been completed.
 
+Version 0.2.0
+-------------
+
+1. Add in the choice for static prices
+
 Version 1.0.0
 -------------
 

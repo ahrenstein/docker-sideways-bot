@@ -18,7 +18,7 @@ import json
 import datetime
 import time
 import aws_functions
-import gemini_exchange
+import coinbase_pro
 
 
 def read_bot_config(config_file: str) -> [str, int, bool, int, str]:
@@ -46,7 +46,7 @@ def read_bot_config(config_file: str) -> [str, int, bool, int, str]:
     if 'name' in data['bot']:
         bot_name = data['bot']['name']
     else:
-        bot_name = "Gemini-" + crypto_currency + "-sideways-bot"
+        bot_name = "Coinbase-" + crypto_currency + "-sideways-bot"
     return crypto_currency, movement_percentage,\
         aws_loaded, cycle_time_minutes, bot_name
 
@@ -80,8 +80,8 @@ def check_price_file() -> [float,float]:
     return data['buy_price'], data['sell_price']
 
 
-def gemini_cycle(config_file: str, debug_mode: bool) -> None:
-    """Perform bot cycles using Gemini ActiveTrader as the exchange
+def coinbase_cycle(config_file: str, debug_mode: bool) -> None:
+    """Perform bot cycles using Coinbase Pro as the exchange
 
         Args:
         config_file: Path to the JSON file containing credentials
@@ -95,34 +95,36 @@ def gemini_cycle(config_file: str, debug_mode: bool) -> None:
         aws_functions.post_to_sns(aws_config[0], aws_config[1], aws_config[2], message, message)
     # Set API URLs
     if debug_mode:
-        gemini_exchange_api_url = "https://api.sandbox.gemini.com"
+        coinbase_pro_api_url = "https://api-public.sandbox.pro.coinbase.com/"
     else:
-        gemini_exchange_api_url = "https://api.gemini.com"
+        coinbase_pro_api_url = "https://api.pro.coinbase.com/"
     print("LOG: Starting bot...\nLOG: Monitoring %s"
-          " on Gemini ActiveTrader to trade across %s%% changes"
+          " on Coinbase Pro to trade across %s%% changes"
           % (config_params[0], config_params[1]))
     for cycle in count():
         now = datetime.datetime.now().strftime("%m/%d/%Y-%H:%M:%S")
         print("LOG: Cycle %s: %s" % (cycle, now))
         # Check if the API is working
-        coin_current_price = gemini_exchange.get_coin_price(
-            gemini_exchange_api_url, config_params[0])
+        coin_current_price = coinbase_pro.get_coin_price(coinbase_pro_api_url,
+                                                         config_file, config_params[0])
         if coin_current_price == -1:
             message = "ERROR: Coin price invalid. This could be an API issue. Ending cycle"
             print(message)
-            subject = "Gemini-%s-Coin price invalid" % config_params[0]
+            subject = "Coinbase-%s-Coin price invalid" % config_params[0]
             if config_params[2]:
                 aws_functions.post_to_sns(aws_config[0], aws_config[1], aws_config[2],
                                           subject, message)
             time.sleep(config_params[3] * 60)
             continue
+        # Get the decimal precision that Coinbase Pro permits for this currency
+        tick_size = coinbase_pro.get_decimal_max(coinbase_pro_api_url,
+                                                 config_file, config_params[0])
+        # Get the fee structure we are working with
+        fee_rate = coinbase_pro.get_fee_rate(coinbase_pro_api_url, config_file)
         # Check if are waiting on a sell
-        currency_balances = gemini_exchange.get_balances\
-            (gemini_exchange_api_url, config_file, config_params[0])
-        # Get the decimal precision that Gemini permits for this currency
-        tick_size = gemini_exchange.get_decimal_max(gemini_exchange_api_url, config_params[0])
-        if gemini_exchange.check_if_open_orders(gemini_exchange_api_url,
-                                                config_file, config_params[0]):
+        currency_balances = coinbase_pro.check_balances(coinbase_pro_api_url,
+                                                        config_file, config_params[0])
+        if coinbase_pro.check_if_open_orders(coinbase_pro_api_url, config_file, config_params[0]):
             print("LOG: There are current limit orders open on the profile. Doing nothing.")
             # Sleep for the specified cycle interval
             time.sleep(config_params[3] * 60)
@@ -132,26 +134,27 @@ def gemini_cycle(config_file: str, debug_mode: bool) -> None:
             print("LOG: %s" % message)
             print(currency_balances[0])
             tx_prices = check_price_file()
-            # Round the currency sell amount correctly and factor in 1% reserved for fees
-            sell_amount = round((currency_balances[0] * .99), tick_size)
-            gemini_exchange.limit_order(gemini_exchange_api_url, config_file, config_params[0],
-                                        sell_amount, tx_prices[1], True, config_params[2])
+            # Round the currency sell amount correctly and factor in the fee
+            sell_amount = round(currency_balances[0], tick_size)
+            coinbase_pro.limit_sell_currency(coinbase_pro_api_url,
+                                             config_file, config_params[0],
+                                             sell_amount, tx_prices[1], config_params[2])
             time.sleep(config_params[3] * 60)
         # Check if we can buy
         elif currency_balances[1] >= 100:
             message = "More than $100 USD so we are in BUY mode"
             print("LOG: %s" % message)
             print("Recording prices to file")
-            coin_current_price = gemini_exchange.get_coin_price\
-                (gemini_exchange_api_url, config_params[0])
+            coin_current_price = coinbase_pro.get_coin_price\
+                (coinbase_pro_api_url, config_file, config_params[0])
             set_price_file(coin_current_price, config_params[1])
             tx_prices = check_price_file()
-            # Round the currency buy amount correctly and factor in 1% reserved for fees
-            buy_amount = round((currency_balances[1] * .99) /
-                               gemini_exchange.get_coin_price(gemini_exchange_api_url,
-                                                              config_params[0]), tick_size)
-            gemini_exchange.limit_order(gemini_exchange_api_url, config_file, config_params[0],
-                                        buy_amount, tx_prices[0], False, config_params[2])
+            # Round the currency buy amount correctly and factor in the fee
+            buy_amount = round((currency_balances[1] - (currency_balances[1] * fee_rate)) /
+                               coin_current_price, tick_size)
+            print("Buy amount: %s" % buy_amount)
+            coinbase_pro.limit_buy_currency(coinbase_pro_api_url, config_file, config_params[0],
+                                            buy_amount, tx_prices[0], config_params[2])
         else:
             print("LOG: Neither %s nor USD have a high enough balance."
                   " Most likely a limit order is on the books right now" % config_params[0])
