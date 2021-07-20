@@ -5,7 +5,7 @@ The versions below are future versions that will be released once those features
 Version 0.2.0
 -------------
 
-1. Add in the choice for static prices
+1. Add in the choice for static movement in dollars on current price
 
 Version 1.0.0
 -------------

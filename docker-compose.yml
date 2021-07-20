@@ -13,5 +13,4 @@ services:
     image: ahrenstein/sideways-bot:latest
     volumes:
       - ./config:/config
-    command: [ "python", "-u", "/app/sideways_bot.py", "-c", "/config/config.json"]
     restart: always

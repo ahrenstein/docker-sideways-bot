@@ -115,7 +115,7 @@ def get_fee_rate(api_url: str, config_file: str) -> float:
         result = requests.get(api_url + api_query, auth=coinbase_auth)
         fee_rate = result.json()['taker_fee_rate']
     except Exception as err:
-        print(err)
+        print("ERROR: %s" % err)
     return float(fee_rate)
 
 

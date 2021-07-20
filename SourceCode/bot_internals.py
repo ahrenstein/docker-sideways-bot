@@ -61,7 +61,7 @@ def set_price_file(price: float, percent: int):
     """
     buy_price = round(price * (1 - percent / 100), 2)
     sell_price = round(price * (1 + percent / 100), 2)
-    json_data = {"buy_price": buy_price, "sell_price": sell_price}
+    json_data = {"buy_price": buy_price, "sell_price": sell_price, "price": price}
     with open("/config/pricing.json", 'w') as prices_file:
         prices_file.write(json.dumps(json_data))
         prices_file.close()
@@ -124,7 +124,7 @@ def coinbase_cycle(config_file: str, debug_mode: bool) -> None:
         # Check if are waiting on a sell
         currency_balances = coinbase_pro.check_balances(coinbase_pro_api_url,
                                                         config_file, config_params[0])
-        if coinbase_pro.check_if_open_orders(coinbase_pro_api_url, config_file, config_params[0]):
+        if coinbase_pro.check_if_open_orders(coinbase_pro_api_url, config_file):
             print("LOG: There are current limit orders open on the profile. Doing nothing.")
             # Sleep for the specified cycle interval
             time.sleep(config_params[3] * 60)
@@ -146,7 +146,7 @@ def coinbase_cycle(config_file: str, debug_mode: bool) -> None:
             print("LOG: %s" % message)
             print("Recording prices to file")
             coin_current_price = coinbase_pro.get_coin_price\
-                (coinbase_pro_api_url, config_file, config_params[0])
+                    (coinbase_pro_api_url, config_file, config_params[0])
             set_price_file(coin_current_price, config_params[1])
             tx_prices = check_price_file()
             # Round the currency buy amount correctly and factor in the fee
