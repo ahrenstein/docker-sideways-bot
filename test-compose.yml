@@ -1,0 +1,18 @@
+#
+# Copyright 2021, Matthew Ahrenstein, All Rights Reserved.
+#
+# Maintainers:
+# - Matthew Ahrenstein: matt@ahrenstein.com
+#
+# See LICENSE
+
+version: '2'
+services:
+  coinbase-btc:
+    container_name: sideways-btc
+    image: local/sideways-bot:test
+    build: ./
+    volumes:
+      - ./config:/config
+    command: [ "python", "-u", "/app/sideways_bot.py", "-c", "/config/test-config.json", "-d"]
+    restart: always

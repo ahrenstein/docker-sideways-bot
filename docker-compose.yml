@@ -1,0 +1,16 @@
+#
+# Copyright 2021, Matthew Ahrenstein, All Rights Reserved.
+#
+# Maintainers:
+# - Matthew Ahrenstein: matt@ahrenstein.com
+#
+# See LICENSE
+
+version: '2'
+services:
+  coinbase-eth:
+    container_name: sideways-eth
+    image: ahrenstein/sideways-bot:latest
+    volumes:
+      - ./config:/config
+    restart: always
