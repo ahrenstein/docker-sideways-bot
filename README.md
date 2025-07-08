@@ -1,3 +1,7 @@
+Deprecated
+==========
+This bot is no longer actively maintained and several of the APIs it relies on may be broken.
+
 Crypto Sideways Bot
 ===================
 This bot is designed to buy and sell cryptocurrency on Coinbase Pro using a USD prefunded portfolio in a sideways fashion.
